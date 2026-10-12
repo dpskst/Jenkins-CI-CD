@@ -82,11 +82,12 @@ pipeline {
                     DEPLOY_OK=false
 
                     for i in $(seq 1 10); do
-                        if curl -fsS http://127.0.0.1:8082/ >/dev/null; then
-                            DEPLOY_OK=true
-                            break
-                        fi
-                        sleep 3
+			if docker exec ${CONTAINER_NAME} \
+			    wget -qO- http://127.0.0.1/ >/dev/null; then
+			    DEPLOY_OK=true
+			    break
+			fi                        
+			sleep 3
                     done
 
                     if [ "$DEPLOY_OK" != "true" ]; then
