@@ -71,6 +71,8 @@ Jenkins 컨테이너에 Docker CLI를 설치하고 호스트의 Docker 소켓을
 Jenkins에서 GitHub 저장소의 소스 코드와 Jenkinsfile을 가져옵니다.
 
 ### 2) Docker Image Build
+<img width="1219" height="743" alt="image" src="https://github.com/user-attachments/assets/fefece19-6873-4a50-80b5-616718bfa609" />
+
 
 Dockerfile을 기반으로 Nginx 웹 애플리케이션 이미지를 빌드합니다.
 
@@ -125,6 +127,7 @@ GitHub에 변경 사항을 Push하면 Jenkins가 다음 확인 주기에 변경 
 ### Docker Credentials 관리
 
 Docker Hub 인증 정보를 Jenkins Credentials로 등록하고 Pipeline에서 참조하도록 구성했습니다. 인증 토큰을 Jenkinsfile에 직접 작성하지 않도록 했습니다.
+<img width="1132" height="422" alt="image" src="https://github.com/user-attachments/assets/c8e0adad-3674-4925-bfba-25417ac7e4f4" />
 
 ## 5. 실행 결과
 
@@ -138,6 +141,7 @@ Docker Hub 인증 정보를 Jenkins Credentials로 등록하고 Pipeline에서 �
 - [x] 배포 실패 시 이전 이미지 복구 로직 구성
 
 테스트 웹 서비스:
+<img width="472" height="172" alt="image" src="https://github.com/user-attachments/assets/d266e2ee-a55a-4fe8-9192-5711bd3d4cbe" />
 
 `http://<SERVER_PUBLIC_IP>:8082`
 
