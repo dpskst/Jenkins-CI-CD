@@ -1,10 +1,10 @@
-
 pipeline {
     agent any
 
     environment {
         IMAGE_NAME = 'dydcjsrjaror/jenkins-cicd-demo'
         IMAGE_TAG  = "${BUILD_NUMBER}"
+        CONTAINER_NAME = 'jenkins-cicd-demo-test'
     }
 
     stages {
@@ -40,8 +40,6 @@ pipeline {
 
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
                         docker push ${IMAGE_NAME}:latest
-
-                        docker logout
                     '''
                 }
             }
@@ -52,11 +50,65 @@ pipeline {
                 sh 'docker images ${IMAGE_NAME}'
             }
         }
+
+        stage('Deploy to Test Server') {
+            steps {
+                sh '''
+                    set -eu
+
+                    docker pull ${IMAGE_NAME}:latest
+
+                    OLD_IMAGE=$(docker inspect \
+                      --format='{{.Image}}' ${CONTAINER_NAME})
+
+                    docker rm -f ${CONTAINER_NAME}
+
+                    if ! docker run -d \
+                      --name ${CONTAINER_NAME} \
+                      --restart unless-stopped \
+                      -p 8082:80 \
+                      ${IMAGE_NAME}:latest; then
+
+                        echo "New deployment failed. Rolling back."
+                        docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
+                        docker run -d \
+                          --name ${CONTAINER_NAME} \
+                          --restart unless-stopped \
+                          -p 8082:80 \
+                          "$OLD_IMAGE"
+                        exit 1
+                    fi
+
+                    DEPLOY_OK=false
+
+                    for i in $(seq 1 10); do
+                        if curl -fsS http://127.0.0.1:8082/ >/dev/null; then
+                            DEPLOY_OK=true
+                            break
+                        fi
+                        sleep 3
+                    done
+
+                    if [ "$DEPLOY_OK" != "true" ]; then
+                        echo "Health check failed. Rolling back."
+                        docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
+                        docker run -d \
+                          --name ${CONTAINER_NAME} \
+                          --restart unless-stopped \
+                          -p 8082:80 \
+                          "$OLD_IMAGE"
+                        exit 1
+                    fi
+
+                    echo "Deployment and HTTP health check succeeded."
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'Docker image build and push completed successfully!'
+            echo 'CI/CD pipeline and test deployment completed successfully!'
         }
         failure {
             echo 'Pipeline failed. Check Console Output.'
@@ -66,4 +118,3 @@ pipeline {
         }
     }
 }
-
